@@ -1,23 +1,32 @@
-// users/users.controller.ts
-
-import { Controller, Post, Body, Put, Param } from '@nestjs/common';
+import { Controller, Post, Get, Put, Delete, Body, Param } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { UserRole } from '../common/common/enums.user-roles';
+import { CreateUserDto } from './dto/create-user.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
+import { User } from './user.entity';
 
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  @Post()
-  async createUser(@Body() userDto: any): Promise<any> {
-    // Lógica para crear un nuevo usuario
-    return this.usersService.createUser(userDto);
+  @Post('/register')
+  async createUser(@Body() createUserDto: CreateUserDto): Promise<User> {
+    return this.usersService.createUser(createUserDto);
   }
 
-  @Put(':username/role')
-  async updateUserRole(@Param('username') username: string, @Body('role') newRole: UserRole): Promise<any> {
-    // Lógica para actualizar el rol de un usuario
-    return this.usersService.updateUserRole(username, newRole);
+  @Get(':id')
+  async getUserById(@Param('id') id: number): Promise<User> {
+    return this.usersService.findUserById(id);
+  }
+
+  @Put(':id')
+  async updateUser(@Param('id') id: number, @Body() updateUserDto: UpdateUserDto): Promise<User> {
+    return this.usersService.updateUser(id, updateUserDto);
+  }
+
+  @Delete(':id')
+  async deleteUser(@Param('id') id: number): Promise<void> {
+    return this.usersService.deleteUser(id);
   }
 }
+
 

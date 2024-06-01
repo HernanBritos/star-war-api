@@ -1,29 +1,45 @@
-import { Injectable } from '@nestjs/common';
-import { UserRole } from '../common/common/enums.user-roles';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { User } from './user.entity';
+import { CreateUserDto } from './dto/create-user.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
 
 @Injectable()
 export class UsersService {
-  private readonly users: any[] = []; // Simulación de base de datos
+  constructor(
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
+  ) {}
 
-  constructor() {}
-
-  async createUser(userDto: any): Promise<any> {
-    // Lógica para crear un nuevo usuario
-    const newUser = { ...userDto, role: UserRole.Regular }; // Asignar rol por defecto
-    this.users.push(newUser);
-    return newUser;
+  async createUser(createUserDto: CreateUserDto): Promise<User> {
+    const user = this.userRepository.create(createUserDto);
+    return this.userRepository.save(user);
   }
 
-  async findUserByUsername(username: string): Promise<any> {
-    // Lógica para buscar un usuario por nombre de usuario
-    return this.users.find(user => user.username === username);
+  async findUserById(id): Promise<User> {
+    const user = await this.userRepository.findOne(id);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    return user;
   }
 
-  async updateUserRole(username: string, newRole: UserRole): Promise<any> {
-    // Lógica para actualizar el rol de un usuario
-    const user = this.users.find(user => user.username === username);
-    if (user) {
-      user.role = newRole;
+  async updateUser(id: number, updateUserDto: UpdateUserDto): Promise<User> {
+    const user = await this.findUserById(id);
+    Object.assign(user, updateUserDto);
+    return this.userRepository.save(user);
+  }
+
+  async deleteUser(id: number): Promise<void> {
+    await this.findUserById(id);
+    await this.userRepository.delete(id);
+  }
+
+  async findOne(id: number): Promise<User> {
+    const user = await this.userRepository.findOne({});
+    if (!user) {
+      throw new NotFoundException('User not found');
     }
     return user;
   }
